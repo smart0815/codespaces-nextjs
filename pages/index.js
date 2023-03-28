@@ -1,71 +1,76 @@
-import { useCallback, useEffect, useState } from 'react'
-import Button from '../components/Button'
-import ClickCount from '../components/ClickCount'
-import styles from '../styles/home.module.css'
+import React from "react";
+import {
+  GridContextProvider,
+  GridDropZone,
+  GridItem,
+  swap,
+  move
+} from "react-grid-dnd";
 
-function throwError() {
-  console.log(
-    // The function body() is not defined
-    document.body()
-  )
-}
+function App() {
+  const [items, setItems] = React.useState({
+    left: [
+      { position: 0, name: "ben" },
+      { position: 1, name: "joe" },
+      { position: 2, name: "jason" },
+      { position: 3, name: "chris" },
+      { position: 4, name: "heather" }
+    ],
+    right: [
+      { position: 5, name: "george" },
+      { position: 6, name: "rupert" },
+      { position: 7, name: "alice" },
+      { position: 8, name: "katherine" },
+      { position: 8, name: "pam" },
+      { position: 10, name: "katie" }
+    ]
+  });
 
-function Home() {
-  const [count, setCount] = useState(0)
-  const increment = useCallback(() => {
-    setCount((v) => v + 1)
-  }, [setCount])
-
-  useEffect(() => {
-    const r = setInterval(() => {
-      increment()
-    }, 1000)
-
-    return () => {
-      clearInterval(r)
+  function onChange(sourceId, sourceIndex, targetIndex, targetId) {
+    console.log(targetId, sourceId);
+    if (targetId) {
+      const result = move(
+        items[sourceId],
+        items[targetId],
+        sourceIndex,
+        targetIndex
+      );
+      return setItems({
+        ...items,
+        [sourceId]: result[0],
+        [targetId]: result[1]
+      });
     }
-  }, [increment])
+
+    const result = swap(items[sourceId], sourceIndex, targetIndex);
+    return setItems({
+      ...items,
+      [sourceId]: result
+    });
+  }
 
   return (
-    <main className={styles.main}>
-      <h1>Fast Refresh Demo</h1>
-      <p>
-        Fast Refresh is a Next.js feature that gives you instantaneous feedback
-        on edits made to your React components, without ever losing component
-        state.
-      </p>
-      <hr className={styles.hr} />
-      <div>
-        <p>
-          Auto incrementing value. The counter won't reset after edits or if
-          there are errors.
-        </p>
-        <p>Current value: {count}</p>
-      </div>
-      <hr className={styles.hr} />
-      <div>
-        <p>Component with state.</p>
-        <ClickCount />
-      </div>
-      <hr className={styles.hr} />
-      <div>
-        <p>
-          The button below will throw 2 errors. You'll see the error overlay to
-          let you know about the errors but it won't break the page or reset
-          your state.
-        </p>
-        <Button
-          onClick={(e) => {
-            setTimeout(() => document.parentNode(), 0)
-            throwError()
-          }}
+    <GridContextProvider onChange={onChange}>
+      <div className="container">
+        <GridDropZone
+          className="dropzone left"
+          id="left"
+          boxesPerRow={3}
+          rowHeight={150}
         >
-          Throw an Error
-        </Button>
+          {items.left.map((item) => (
+            <GridItem key={item.position}>
+              <div className="grid-item">
+                <div className="grid-item-content">
+                  {item.name.toUpperCase()}
+                </div>
+              </div>
+            </GridItem>
+          ))}
+        </GridDropZone>
       </div>
-      <hr className={styles.hr} />
-    </main>
-  )
+    </GridContextProvider>
+  );
 }
 
-export default Home
+export default App
